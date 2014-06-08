@@ -3,15 +3,7 @@ escodegen  = require 'escodegen'
 _          = require 'underscore'
 util       = require 'util'
 
-_.mixin clear: (obj) ->
-  keys = _.keys obj
-  delete obj[key] for key in keys
-
-_.mixin replace: (current, other) ->
-  _.clear current
-  _.extend current, other
-
-_.mixin inspect: (tree) ->
+inspectAst = (tree) ->
   console.log(util.inspect(tree, {colors:true, depth:null}))
   tree
 
@@ -57,7 +49,6 @@ traverse = (ast, fn) ->
 
   fn(ast)
 
-_.mixin traverse: traverse
 
 macros = {}
 
@@ -66,11 +57,11 @@ define = (defines) ->
 
 inspect = (fn) ->
   code = "a=#{fn.toString()}"
-  _(esprima.parse(code)).inspect()
+  inspectAst(esprima.parse(code))
 
 evaluate = (fn) ->
   code = "a=#{fn.toString()}"
-  ast = _(esprima.parse(code)).traverse((node) ->
+  ast = traverse(esprima.parse(code), (node) ->
     if _(node.type).isEqual('CallExpression') and
        _(macros).has(node.callee.name)
       macros[node.callee.name](node)
@@ -81,14 +72,11 @@ evaluate = (fn) ->
       type: "ExpressionStatement"
       expression: node.argument
     else
-      node
-  )
-  #_(ast).inspect()
-  code = escodegen.generate(ast)
-  console.log code
-  code
+      node)
+  escodegen.generate(ast)
 
 evaluate.define = define
 evaluate.inspect = inspect
 
 module.exports = evaluate
+
