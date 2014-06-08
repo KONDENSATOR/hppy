@@ -26,7 +26,6 @@ hppy.define(
     f
 
   cont: (ast) ->
-    console.log("CONT")
     _(ast).inspect()
     # Get the real function from the last argument of CPS
     f = _(ast.arguments).last()
@@ -70,19 +69,7 @@ hppy.define(
 
   err: (ast) ->
     ast.callee.name = HPPY_CALLBACK_NAME
-    console.log("ERR")
-    _(ast).inspect())
-
-console.log "================ TEMPLATE  =============="
-hppy.inspect(() ->
-  myfunc = (fileName, cb) ->
-    fs.readFile(fileName, 'utf8', (err, data) ->
-      if err?
-        cb(err)
-      else
-        cb(null, data)))
-
-console.log "================ PRODUCT  =============="
+    ast)
 
 eval(hppy(() ->
   myfunc = cps((fileName) ->
@@ -92,25 +79,11 @@ eval(hppy(() ->
       else
         ret(data))))
 
-  add = () -> 1 + 1
-
-  add()
-
   myfunc('testfile', (err, data) ->
     if err?
-
-      # Error management for GUI users
-      if _.contains err.id, 'myfunc'
-        console.log "Error in myfunc"
-
-      if _.contains err.id, 'readfile'
-        console.log "Could not read file"
-
-      else
-        console.log "No handler defined for error id #{err.id}"
-
       # Log output for system administrators
       console.error err
     else
       console.log "No errors"
       console.log data)))
+
