@@ -52,7 +52,6 @@ hppy.define(
   #       console.log(text))
   #
   cont: (ast) ->
-    _(ast).inspect()
     # Get the real function from the last argument of CPS
     f = _(ast.arguments).last()
     # Push the callback template parameter to the function arguments
