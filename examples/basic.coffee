@@ -16,7 +16,18 @@ CALLBACKARG =
   type: 'Identifier'
   name: HPPY_CALLBACK_NAME
 
+# This is where we define our macros
 hppy.define(
+
+  # Adds a callback argument named HPPY_CALLBACK_NAME as last param
+  # to the declared function signature.
+  #
+  # Usage:
+  #   myasyncfunction = cps((any, arguments) ->)
+  #
+  # Translates to:
+  #   myasyncfunction = (any, arguments, hppy_callback) ->
+  #
   cps: (ast) ->
     # Get the real function from the last argument of CPS
     f = _(ast.arguments).last()
@@ -25,6 +36,21 @@ hppy.define(
     # Return the modified function
     f
 
+  # Adds a err parameter as a first param to the inlined function.
+  # Then adds a if statement to the begining of the function that
+  # checks if err is null or not. If err isn't null, it will
+  # call the CPS callback function.
+  #
+  # Usage:
+  #   fs.readFile(file, cont((text) -> console.log(text)))
+  #
+  # Translates to:
+  #   fs.readFile(file, (err, text) ->
+  #     if err?
+  #       callback(err)
+  #     else
+  #       console.log(text))
+  #
   cont: (ast) ->
     _(ast).inspect()
     # Get the real function from the last argument of CPS
@@ -33,27 +59,44 @@ hppy.define(
     f.params.unshift(ERRORARG)
     # Return the modified function
     body = f.body.body
-    f.body.body = [ {
+    f.body.body =
       type: 'IfStatement'
-      test: {
+      test:
         type: 'BinaryExpression'
         operator: '!='
-        left: { type: 'Identifier', name: HPPY_ERROR_NAME }
-        right: { type: 'Literal', value: null, raw: 'null' } }
-      consequent: {
+        left:
+          type: 'Identifier'
+          name: HPPY_ERROR_NAME
+        right:
+          type: 'Literal'
+          value: null
+          raw: 'null'
+      consequent:
         type: 'BlockStatement'
-        body: [ {
+        body:
           type: 'ReturnStatement'
-          argument: {
+          argument:
             type: 'CallExpression'
-            callee: { type: 'Identifier', name: HPPY_CALLBACK_NAME }
-            arguments: [ { type: 'Identifier', name: HPPY_ERROR_NAME } ] } } ] }
-      alternate: {
+            callee:
+              type: 'Identifier'
+              name: HPPY_CALLBACK_NAME
+            arguments: [
+              type: 'Identifier'
+              name: HPPY_ERROR_NAME ]
+      alternate:
         type: 'BlockStatement'
         body: body
-      } } ]
     f
 
+  # 'Returns' the given value by passing it to the callback as
+  # the second argument.
+  #
+  # Usage:
+  #   ret(text)
+  #
+  # Translates to:
+  #   callback(null, args)
+  #
   ret: (ast) ->
     # Clone the ret arguments
     args = ast.arguments.slice()
@@ -67,10 +110,21 @@ hppy.define(
       type    : 'Identifier'
       name    : HPPY_CALLBACK_NAME
 
+  # 'Returns' the given value by passing it to the callback as
+  # the first argument.
+  #
+  # Usage:
+  #   ret('My error message')
+  #
+  # Translates to:
+  #   callback(args)
+  #
   err: (ast) ->
     ast.callee.name = HPPY_CALLBACK_NAME
     ast)
 
+
+# This code will be processed with the macros
 eval(hppy(() ->
   myfunc = cps((fileName) ->
     fs.readFile(fileName, 'utf8', cont('myfunc', 'readfile', (data) ->
