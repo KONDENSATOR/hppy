@@ -2,6 +2,7 @@ esprima    = require 'esprima'
 escodegen  = require 'escodegen'
 _          = require 'underscore'
 util       = require 'util'
+helpers    = require './ast-helpers'
 
 inspectAst = (tree) ->
   console.log(util.inspect(tree, {colors:true, depth:null}))
@@ -49,7 +50,6 @@ traverse = (ast, fn) ->
 
   fn(ast)
 
-
 macros = {}
 
 define = (defines) ->
@@ -60,23 +60,43 @@ inspect = (fn) ->
   inspectAst(esprima.parse(code))
 
 evaluate = (fn) ->
+  # Convert function to a parsable string
   code = "a=#{fn.toString()}"
+
+  # Traverse the AST and execute macros as we find them
   ast = traverse(esprima.parse(code), (node) ->
-    if _(node.type).isEqual('CallExpression') and
+    (if _(node.type).isEqual('CallExpression') and
        _(macros).has(node.callee.name)
       macros[node.callee.name](node)
     else
-      node)
+      node))
+
+  # Put the resulting AST back from where we got it
+  inspectAst(ast)
   ast.body = _(ast.body[0].expression.right.body.body).map((node) ->
     if node.type == "ReturnStatement"
       type: "ExpressionStatement"
       expression: node.argument
     else
       node)
-  escodegen.generate(ast)
 
+  # Generate the new source code
+  c = escodegen.generate(ast)
+  console.log c
+  c
+
+# Export the functions that should be visible from the outside
 evaluate.define = define
 evaluate.inspect = inspect
+
+evaluate.callExpression = helpers.callExpression
+evaluate.identifier = helpers.identifier
+evaluate.nullLiteral = helpers.nullLiteral
+evaluate.binaryExpression = helpers.binaryExpression
+evaluate.ifStatement = helpers.ifStatement
+evaluate.blockStatement = helpers.blockStatement
+evaluate.returnStatement = helpers.returnStatement
+evaluate.functionName = helpers.functionName
 
 module.exports = evaluate
 

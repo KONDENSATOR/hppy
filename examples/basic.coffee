@@ -58,33 +58,17 @@ hppy.define(
     f.params.unshift(ERRORARG)
     # Return the modified function
     body = f.body.body
-    f.body.body =
-      type: 'IfStatement'
-      test:
-        type: 'BinaryExpression'
-        operator: '!='
-        left:
-          type: 'Identifier'
-          name: HPPY_ERROR_NAME
-        right:
-          type: 'Literal'
-          value: null
-          raw: 'null'
-      consequent:
-        type: 'BlockStatement'
-        body:
-          type: 'ReturnStatement'
-          argument:
-            type: 'CallExpression'
-            callee:
-              type: 'Identifier'
-              name: HPPY_CALLBACK_NAME
-            arguments: [
-              type: 'Identifier'
-              name: HPPY_ERROR_NAME ]
-      alternate:
-        type: 'BlockStatement'
-        body: body
+    f.body.body = hppy.ifStatement(
+      hppy.binaryExpression(
+        '!='
+        hppy.identifier(HPPY_ERROR_NAME)
+        hppy.nullLiteral())
+      hppy.blockStatement(
+        hppy.returnStatement(
+          hppy.callExpression(
+            HPPY_CALLBACK_NAME
+            hppy.identifier(HPPY_ERROR_NAME)))
+      hppy.blockStatement(body)))
     f
 
   # 'Returns' the given value by passing it to the callback as
@@ -99,15 +83,12 @@ hppy.define(
   ret: (ast) ->
     # Clone the ret arguments
     args = ast.arguments.slice()
+
     # Add a NULL template in the begining
     args.unshift(NULLARG)
 
     # Return new AST node
-    type      : 'CallExpression'
-    arguments : args
-    callee    :
-      type    : 'Identifier'
-      name    : HPPY_CALLBACK_NAME
+    hppy.callExpression(args, HPPY_CALLBACK_NAME)
 
   # 'Returns' the given value by passing it to the callback as
   # the first argument.
@@ -118,9 +99,7 @@ hppy.define(
   # Translates to:
   #   callback(args)
   #
-  err: (ast) ->
-    ast.callee.name = HPPY_CALLBACK_NAME
-    ast)
+  err: (ast) -> hppy.functionName(ast, HPPY_CALLBACK_NAME))
 
 
 # This code will be processed with the macros
