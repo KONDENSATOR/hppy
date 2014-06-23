@@ -1,7 +1,6 @@
 hppy = require '../'
 fs   = require 'fs'
 _    = require 'underscore'
-util = require 'util'
 
 HPPY_CALLBACK_NAME = "hppy_callback"
 HPPY_ERROR_NAME = "hppy_error"
