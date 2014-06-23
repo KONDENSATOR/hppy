@@ -72,7 +72,6 @@ evaluate = (fn) ->
       node))
 
   # Put the resulting AST back from where we got it
-  inspectAst(ast)
   ast.body = _(ast.body[0].expression.right.body.body).map((node) ->
     if node.type == "ReturnStatement"
       type: "ExpressionStatement"
@@ -81,13 +80,12 @@ evaluate = (fn) ->
       node)
 
   # Generate the new source code
-  c = escodegen.generate(ast)
-  console.log c
-  c
+  escodegen.generate(ast)
 
 # Export the functions that should be visible from the outside
 evaluate.define = define
 evaluate.inspect = inspect
+evaluate.inspectAst = inspectAst
 
 evaluate.callExpression = helpers.callExpression
 evaluate.identifier = helpers.identifier
@@ -97,6 +95,8 @@ evaluate.ifStatement = helpers.ifStatement
 evaluate.blockStatement = helpers.blockStatement
 evaluate.returnStatement = helpers.returnStatement
 evaluate.functionName = helpers.functionName
+evaluate.EQ = "=="
+evaluate.NEQ = "!="
 
 module.exports = evaluate
 

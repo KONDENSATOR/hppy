@@ -1,5 +1,5 @@
 # Defines a call expression
-exports.callExpression = (name, args...) ->
+exports.callExpression = (name, args) ->
   type      : 'CallExpression'
   callee    :
     type    : 'Identifier'
@@ -42,3 +42,4 @@ exports.functionName = (ast, name) ->
     ast
   else
     ast.callee.name
+

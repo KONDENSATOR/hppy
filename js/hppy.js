@@ -75,7 +75,7 @@
   };
 
   evaluate = function(fn) {
-    var ast, c, code;
+    var ast, code;
     code = "a=" + (fn.toString());
     ast = traverse(esprima.parse(code), function(node) {
       if (_(node.type).isEqual('CallExpression') && _(macros).has(node.callee.name)) {
@@ -84,7 +84,6 @@
         return node;
       }
     });
-    inspectAst(ast);
     ast.body = _(ast.body[0].expression.right.body.body).map(function(node) {
       if (node.type === "ReturnStatement") {
         return {
@@ -95,14 +94,14 @@
         return node;
       }
     });
-    c = escodegen.generate(ast);
-    console.log(c);
-    return c;
+    return escodegen.generate(ast);
   };
 
   evaluate.define = define;
 
   evaluate.inspect = inspect;
+
+  evaluate.inspectAst = inspectAst;
 
   evaluate.callExpression = helpers.callExpression;
 
@@ -119,6 +118,10 @@
   evaluate.returnStatement = helpers.returnStatement;
 
   evaluate.functionName = helpers.functionName;
+
+  evaluate.EQ = "==";
+
+  evaluate.NEQ = "!=";
 
   module.exports = evaluate;
 
