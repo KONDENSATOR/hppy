@@ -175,7 +175,7 @@ print = (text) ->
 # This code will be processed with the macros
 eval(print hppy(() ->
   myfunc = cps((fileName) ->
-    fs.readFile(fileName, 'utf8', cont('myfunc', 'readfile', (data) ->
+    fs.readFile(fileName, 'utf8', cont((data) ->
       if data.length == 0
         err("File empty!")
       else
